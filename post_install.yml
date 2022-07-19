@@ -1,0 +1,52 @@
+---
+- hosts: localhost
+  vars:
+    installed_pkgs: "{{ lookup('file', 'installed_pkgs.txt') }}"
+  tasks:
+    - name: Add the flathub flatpak repository remote to the user installation
+      community.general.flatpak_remote:
+        name: flathub
+        state: present
+        flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+        method: user
+    - name: Add the flathub flatpak beta repository remote to the user installation
+      community.general.flatpak_remote:
+        name: flathub-beta
+        state: present
+        flatpakrepo_url: https://flathub.org/beta-repo/flathub-beta.flatpakrepo
+        method: user
+    - name: Install packages from file
+      dnf:
+        name: "{{ installed_pkgs }}"
+        state: latest
+
+    - name: Install pip
+      ansible.builtin.command: python -m ensurepip --upgrade
+      register: pip
+
+    - name: Install psutil
+      pip:
+        name: psutil
+
+
+
+    - name: Enable xanmod kernel from copr
+      community.general.copr:
+        host: copr.fedorainfracloud.org
+        state: enabled
+        name:  rmnscnce/kernel-xanmod
+    - name: Enable waydroid from copr
+      community.general.copr:
+        host: copr.fedorainfracloud.org
+        state: enabled
+        name: aleasto/waydroid
+
+
+    - name: Enable Night Light
+      dconf:
+        key: "/org.gnome.settings-daemon.plugins.color.night-light-enabled"
+        value: "true"
+    - name: Set Night Light Temperature
+      dconf:
+        key: "/org/gnome/settings-daemon/plugins/color/night-light-temperature"
+        value: "uint32 5500"
